@@ -1,0 +1,449 @@
+---
+title: "Rstudio- Funciones más frecuentes"
+author: "Thelma"
+date: "2024-06-20"
+output:
+  pdf_document: default
+  word_document: default
+editor_options: 
+    wrap: 72
+---
+
+#### Primero siempre abrir librerías
+
+En caso que no estén instaladas "install.packages("")
+
+```{r}
+library ("tidyverse")
+library("eph")
+```
+
+Abrir bases de ejemplo
+
+```{r message=FALSE}
+eph_3trim_2022 <- 
+  get_microdata (year= 2022, trimester= 3, type = "individual")
+
+inmuebles<- 
+  read_csv("C:/Users/USUARIO/Documents/Análisis Datos/R/inmueblesEN.csv")
+
+```
+
+### Tidyverse
+
+**Table**
+
+Conocer frecuencias Hacer una tabla con las categorías y frecuencias x
+categorías
+
+```{r setup, include=FALSE}
+#Frecuencias en número entero
+
+table (eph_3trim_2022$ESTADO)
+
+#Frecuencias en porcentajes
+
+prop.table (table (eph_3trim_2022$ESTADO))
+
+#Frecuencias en porcentajes con dos dígitos
+
+round (prop.table (table (eph_3trim_2022$ESTADO)), digits = 2)
+```
+
+**Pipe**
+
+```{r}
+# (Ctrl + shift + M)
+
+# Porcentaje con pipe
+
+eph_3trim_2022$ESTADO %>% 
+  table () %>% 
+  prop.table() %>% 
+  round(digits = 2)
+
+# <-  es (alt + - (gion))
+```
+
+**Unique**
+
+Identificar categorías o variables
+
+```{r}
+unique(eph_3trim_2022$REGION)
+```
+
+**head()**
+
+Ver los primeros datos de la base
+
+```{r}
+head(eph_3trim_2022)
+```
+
+### Paquete dplyr
+
+```{r}
+library("dplyr")
+```
+
+select() #selecciona variables filter() #selecciona filas mutate() #crea
+o edita variables rename() #renombra variables group_by() #segmenta en
+función de una variable summarise() #genera una tabla resumen
+
+**select ()**
+
+```{r}
+#Select por nombre de variables
+
+b_eph_seleccion <- eph_3trim_2022 %>% 
+  select (ESTADO, CH04, CH06)
+b_eph_seleccion
+
+
+#Select por N de variable
+
+c_eph_seleccion <- eph_3trim_2022 %>% 
+select (1, 3, 10)
+c_eph_seleccion
+
+
+#Select por columna de interés según variables
+
+objeto3_eph <- c(eph_3trim_2022$ANO4 [4], eph_3trim_2022$NRO_HOGAR [4], eph_3trim_2022$AGLOMERADO[4])
+objeto3_eph 
+
+##Select por rango de variables 
+
+eph_3trim_2022 %>% 
+  select (1 : 10)
+  eph_3trim_2022
+
+  
+#Select si comienzan o terminan de alguna manera las variables
+
+eph_3trim_2022 %>% 
+select(starts_with ("POND"))
+
+
+eph_3trim_2022 %>% 
+  select (ends_with ("M"))
+
+
+#Select si el nombre de la variable contiene... 
+
+eph_3trim_2022 %>% 
+  select (contains ("1"))
+
+#Select más de una forma de selección
+
+objeto_1 <- eph_3trim_2022 %>% 
+  select(ends_with("TOT"), 3,  ANO4)
+
+```
+
+**colnames()**
+
+```{r}
+colnames(eph_3trim_2022)
+```
+
+**filter()**
+
+```{r}
+
+OBJETO_2 <- eph_3trim_2022 %>% 
+  filter(REGION %in% c("40", "42", "43" ) &
+  CH08  == 2) %>% 
+ print()
+
+obj_prov <- inmuebles %>% 
+  filter(provincia %in% c("Montevideo", "Santiago", "Ciudad de Buenos Aires" ) &
+  situacion_inmueble  == "Alquilado") %>% 
+ print()
+```
+
+**mutate()**
+
+```{r}
+unique(eph_3trim_2022$REGION)
+
+v_nueva <- eph_3trim_2022 %>%
+  mutate(REGION = case_when(
+    REGION <= 41 ~ "Pequeña",
+    REGION == 42 ~ "Mediana",
+    REGION > 43 ~ "Grande",
+    TRUE ~ "otros"
+  )) %>% 
+  print()
+```
+
+```{r}
+v_nueva <- inmuebles %>%
+  mutate(superficie_aproximada_m2 = case_when(
+    superficie_aproximada_m2 >= 0 & superficie_aproximada_m2 <= 1000 ~ "Pequeña", 
+    superficie_aproximada_m2 > 1000 & superficie_aproximada_m2 <= 5000 ~ "Mediana",
+    superficie_aproximada_m2 > 5000 ~ "Grande",
+    TRUE ~ "otros"
+  ))
+
+```
+
+**group_by()**
+
+```{r}
+base_3_provincias <- eph_3trim_2022 %>% 
+  group_by(ANO4) %>% 
+  summarise (ANO4 = n()) %>% 
+  print()
+```
+
+```{r}
+
+base_3_provincias <- inmuebles %>% 
+  filter(provincia %in% c("Cordoba", "Buenos Aires")) %>% 
+  group_by(situacion_inmueble) %>% 
+  summarise(cantidad_personas = n()) %>% 
+  print()
+```
+
+**rename()**
+
+```{r}
+# Usamos rename() para cambiar el nombre de las columnas
+#inmuebles_renamed <- inmuebles %>%
+#  rename(
+#    area = superficie_aproximada_m2,
+#    cost = precio,
+#    location = ubicacion
+#  )
+```
+
+#### Funciones para inspeccionar la base
+
+summary() glimpse() sample_n() data.frame()
+
+**summary()**
+
+hace un resumen de las principales mediciones de todas las varaables de
+una base o de una variable en particular
+
+```{r}
+summary(inmuebles)
+```
+
+```{r}
+summary(inmuebles$longitud)
+```
+
+**glimpse()**
+
+Vista Compacta: Muestra las primeras filas de cada columna en un formato
+compacto. Tipo de Datos: Muestra el tipo de datos de cada columna.
+Nombres de Columnas: Enumera los nombres de las columnas. Estructura:
+Muestra la estructura básica del dataframe de una manera que sea fácil
+de leer.
+
+```{r}
+glimpse(inmuebles)
+```
+
+**sample_n()**
+
+Seleccionar aleatoriamente un número específico de filas de un
+dataframe.
+
+```{r}
+inmuebles %>% 
+  sample_n(size = 10)
+```
+
+**data.frame()**
+
+```{r}
+diccionario_niveles <- data.frame(nivel_ed = 1:7,
+                                  nivel_ed_text = c(
+                                    "Primaria incompleta",
+                                    "Primaria completa",
+                                    "Secundaria incompleta",
+                                    "Secundaria completa",
+                                    "Terc/Univ incompleta",
+                                    "Terc/Univ completa",
+                                    "Sin Instruccion")) %>% 
+  print()
+```
+
+```{r}
+#Data frame de ejemplo aleatorio
+
+base_encuesta <- data.frame(
+  sexo = sample(x = 1:2,size = 15,replace = T),
+  edad = sample(x = 1:99,size = 15,replace = T),
+  nivel_ed = sample(x = 1:7,size = 15,replace = T)) %>% 
+  print()
+```
+
+#### Uniendo dataframes
+
+**left_join ()**
+
+```{r}
+join1 <- base_encuesta %>%  
+  left_join(diccionario_niveles) %>% 
+  print()
+```
+
+**bind_rows ()**
+
+unir (apilar) dos o más dataframes (o listas de dataframes) por filas.
+
+```{r}
+join2 <- base_encuesta %>%  
+  bind_rows(diccionario_niveles) %>% 
+  print()
+```
+
+### Exportando objetos
+
+```{r}
+#write.xlsx(x = objeto_resultados,file = "Resultados/cuadro1.xlsx")
+```
+
+```{r}
+#saveRDS(object = objeto_resultados,file = "Resultados/base_nueva.RDS")
+```
+
+### Stings
+
+if () {print ("")}
+
+str_length()
+
+str_c()
+
+str_sub()
+
+str_to_lower()
+
+str_to_upper()
+
+str_to_title()
+
+str_detect()
+
+str_replace_all ()
+
+str_extract_all()
+
+str_remove_all()
+
+**IF**
+
+```{r}
+if( 2+2 == 4){
+
+  print("Todo marcha bien")
+
+}
+```
+
+**str_length()**
+
+```{r}
+string1 <- c("SputnikV")
+
+str_length(string1)
+```
+
+**str_c()**
+
+```{r}
+texto1 <- "qué"
+texto2 <- "variantes?"
+
+str_c(texto1,texto2)
+str_c(texto1,texto2,sep = " ")
+```
+
+```{r}
+texto3 <- c("hace","loco","bien") 
+
+str_c(texto1,texto3,sep = " ") # Vector de dimensión 3
+
+str_c(texto1,texto3,sep = " ",collapse = " - ") # Vector de dimensión 1
+```
+
+```{r}
+telefonos <- c("4544-5645","4523-8972","4568-8945")
+str_c("011-",telefonos)
+```
+
+**str_sub ()**
+
+```{r}
+#quiero el tercer caracter
+
+string1
+
+str_sub(string1,3,3)
+
+
+```
+
+**str_to_lower()**
+
+```{r}
+str_to_lower(string1)
+```
+
+**str_to_upper()**
+
+```{r}
+str_to_upper(string1)
+```
+
+**str_to_title()**
+
+```{r}
+str_to_title("vacunación en argentina")
+```
+
+Si queremos acceder al primer elemento de la lista
+
+```{r}
+#tweets.ejemplo.split[[1]]
+```
+
+**str_detect()**
+
+```{r}
+inmuebles_ej <- inmuebles %>%
+  select(provincia) %>% 
+  mutate(localidad = str_replace_all(
+provincia, "Ciudad Autonoma de Buenos Aires", "CABA")) %>% 
+  print()
+```
+
+str_replace_all ()
+
+**str_extract_all()**
+
+```{r}
+inmuebles_ej <- inmuebles %>%
+   select(organizacion) %>% 
+  mutate(AFIP = str_extract_all(organizacion, "AFIP"))
+
+print(inmuebles_ej)
+
+```
+
+**str_remove_all()**
+
+```{r}
+# Eliminar todas las ocurrencias de "Avenida" y "Calle"
+inmuebles_ej_2 <- inmuebles %>%
+  select(calle) %>% 
+  mutate(calle_sin_avenida_calle = str_remove_all(calle, "Avenida|Calle|de")) %>% 
+print()
+
+```
