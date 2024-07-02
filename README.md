@@ -1,2 +1,2 @@
 # Rstudio
-Funciones básicas más utilizadas de R
+Contiene un Markdown con las funciones básicas más utilizadas de R que puede servir como ayuda a memoria
